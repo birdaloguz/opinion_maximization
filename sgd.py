@@ -1,7 +1,5 @@
 import pandas as pd
 import numpy as np
-import random
-from scipy.sparse.linalg import svds
 
 def prediction(P,Q):
     return np.dot(P.T,Q)
@@ -58,7 +56,7 @@ def get_rating_estimations(A):
         val_errors.append(val_rmse)
 
     R_tilda = np.dot(U.T, V)
-    r_avg = np.true_divide(R_tilda.sum(0), (R_tilda != 0).sum(0)).mean()
+    r_avg = np.true_divide(A.sum(0), (A != 0).sum(0)).mean()
     opinion_matrix = R_tilda - r_avg
 
-    return R_tilda, opinion_matrix, U, V, r_avg
+    return R_tilda, opinion_matrix, U, V

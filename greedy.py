@@ -10,7 +10,7 @@ def greedy_om(G, r_q, C_p = [], k=50):
     while list(set(list(G.nodes))-set(list(set().union(C_p ,S))))!=[] and len(S)!=k:
         O_max = float("-inf")
         for user in list(set(list(G.nodes))-set(list(set().union(C_p ,S)))):
-            ## TO IMPLEMENT : find total opinion for each user O and find activated nodes C
+            ##find total opinion for each user O and find activated nodes C
             S_t = list(set().union(C_p ,S, [user]))
             O=0
             C=[]
@@ -34,6 +34,5 @@ def greedy_om(G, r_q, C_p = [], k=50):
                 C_best = C
         S = list(set().union(S, [user_best]))
         C_out = C_best
-        ###should remember activated nodes
     return S, C_out
 

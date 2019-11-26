@@ -6,7 +6,7 @@ import numpy as np
 ##get matrix
 movie_ratings = pd.read_csv('CiaoDVD/movie-ratings.txt', names=["user_id", "movie_id", "genre_id", "review_id", "rating", "timestamp"],
                 header=None, sep=',', engine='python').drop_duplicates(subset=['user_id', 'movie_id'])
-
+r_avg = movie_ratings['rating'].mean()
 matrix_um = movie_ratings.pivot(index='user_id', columns='movie_id', values='rating').fillna(0)
 droplist = [i for i in matrix_um.columns if np.count_nonzero(matrix_um[i])<20]
 matrix_um.drop(droplist, axis=1, inplace=True)
@@ -20,6 +20,7 @@ with open('CiaoDVD/trusts.txt') as fp:
         b = line.split(',')[0]
         if int(a) <= 17615 and int(b) <= 17615:
             G.add_edge(int(a), int(b))
+
 
 for edge in list(G.edges):
     try:
@@ -36,20 +37,19 @@ for node in list(G.nodes):
     G.nodes[node]['threshold'] = round(random.uniform(0, 1), 3)
 
 
-R_tilda, opinion_matrix, U, V, r_avg = get_rating_estimations(A)
+R_tilda, opinion_matrix, U, V= get_rating_estimations(A)
 
 ##init random product vector v_t
 v_t = np.random.uniform(0, 2, size=(3, 1))
 V = np.append(V, v_t, axis=1)
 
-
 ##greedy algorithm
-v_new = np.random.rand(2,1)
 C_p = []
 T = 2 #rounds
 seed_set = []
 
 for t in range(T):
+    v_t = V[:, [-1]]
     r_q = np.dot(U.T, v_t) - r_avg
     R_new_p = np.dot(U.T, V)
 
@@ -62,9 +62,11 @@ for t in range(T):
     for idx, i in enumerate(r_q):
         if idx+1 not in C_p:
             r_v[idx]=0
+        else:
+            print(r_v[idx])
     updated_A = np.hstack((A, np.reshape(r_v, (len(r_v), 1))))
-
-    R_tilda, opinion_matrix, U, V, r_avg = get_rating_estimations(updated_A)
+    #print(updated_A)
+    R_tilda, opinion_matrix, U, V = get_rating_estimations(updated_A)
 
 
 print(seed_set)
