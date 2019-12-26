@@ -1,62 +1,46 @@
 import pandas as pd
 import numpy as np
+import random
 
-def prediction(P,Q):
-    return np.dot(P.T,Q)
-
-from sklearn.metrics import mean_squared_error
-from math import sqrt
-
-def rmse(prediction, ground_truth):
-    prediction = prediction[ground_truth.nonzero()].flatten()
-    ground_truth = ground_truth[ground_truth.nonzero()].flatten()
-    return sqrt(mean_squared_error(prediction, ground_truth))
+# Scoring Function: Root Mean Squared Error
+def rmse_score(R, Q, P):
+    I = R != 0  # Indicator function which is zero for missing data
+    ME = I * (R - np.dot(P, Q.T))  # Errors between real and predicted ratings
+    MSE = ME ** 2
+    return np.sqrt(np.sum(MSE) / np.sum(I))  # sum of squared errors
 
 
-def train_test_split(ratings):
-    validation = np.zeros(ratings.shape)
-    train = ratings.copy()  # don't do train=ratings, other wise, ratings becomes empty
+def get_rating_estimations(R, validation=False):
+    n_u, n_m = R.shape
+    f = 3  # Number of latent factor pairs
+    lmbda = 0.50  # Regularisation strength
+    gamma = 0.01  # Learning rate
+    n_epochs = 15  # Number of loops through training data
+    U = 3 * np.random.rand(n_u, f)  # Latent factors for users
+    V = 3 * np.random.rand(n_m, f)  # Latent factors for movies
 
-    for user in np.arange(ratings.shape[0]):
-        if len(ratings[user, :].nonzero()[
-                   0]) >= 35:  # 35 seems to be best, it depends on sparsity of your user-item matrix
-            val_ratings = np.random.choice(ratings[user, :].nonzero()[0],
-                                           size=15,  # tweak this, 15 seems to be optimal
-                                           replace=False)
-            train[user, val_ratings] = 0
-            validation[user, val_ratings] = ratings[user, val_ratings]
-    return train, validation
-
-def get_rating_estimations(A):
-    train_errors = []
-    val_errors = []
-
-    train, val = train_test_split(A)
-
-    # Only consider items with ratings
-    users, items = A.nonzero()
-
-    lmbda = 0.4 # Regularization parameter
-    k = 3 #tweak this parameter
-    m, n = A.shape  # Number of users and items
-    n_epochs = 100  # Number of epochs
-    alpha=0.01  # Learning rate
-
-    U = 3 * np.random.rand(k,m) # Latent user feature matrix
-    V = 3 * np.random.rand(k,n) # Latent movie feature matrix
+    users, items = R.nonzero()
     for epoch in range(n_epochs):
         for u, i in zip(users, items):
-            e = A[u, i] - prediction(U[:, u], V[:, i])  # Calculate error for gradient update
-            U[:, u] += alpha * (e * V[:, i] - lmbda * U[:, u])  # Update latent user feature matrix
-            V[:, i] += alpha * (e * U[:, u] - lmbda * V[:, i])  # Update latent item feature matrix
+            e = R[u, i] - np.dot(U[u, :], V[i, :].T)  # Error for this observation
+            U[u, :] += gamma * (e * V[i, :] - lmbda * U[u, :])  # Update this user's features
+            V[i, :] += gamma * (e * U[u, :] - lmbda * V[i, :])  # Update this movie's features
 
-        train_rmse = rmse(prediction(U, V), A)
-        val_rmse = rmse(prediction(U, V), val)
-        train_errors.append(train_rmse)
-        val_errors.append(val_rmse)
 
-    R_tilda = np.dot(U.T, V)
-    r_avg = np.true_divide(A.sum(0), (A != 0).sum(0)).mean()
+    if validation:
+        val = random.randint(0, 400)
+        val_v = V[val]
+        V = np.delete(V, np.s_[val], axis=0)
+        R_tilda = np.dot(U, V.T)
+        r_avg = np.true_divide(R.sum(0), (R != 0).sum(0)).mean()
+        opinion_matrix = R_tilda - r_avg
+        val_ratings = np.dot(U, val_v.T)
+        return R_tilda, opinion_matrix, U, V, val, val_ratings
+
+
+    R_tilda = np.dot(U, V.T)
+    r_avg = np.true_divide(R.sum(0), (R != 0).sum(0)).mean()
     opinion_matrix = R_tilda - r_avg
+
 
     return R_tilda, opinion_matrix, U, V
