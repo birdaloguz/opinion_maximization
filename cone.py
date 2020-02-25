@@ -4,8 +4,8 @@ import numpy as np
 import networkx as nx
 
 ##get matrix
-"""movie_ratings = pd.read_csv('CiaoDVD/movie-ratings.txt', names=["user_id", "movie_id", "genre_id", "review_id", "rating", "timestamp"],
-                header=None, sep=',', engine='python').drop_duplicates(subset=['user_id', 'movie_id'])"""
+"""movie_ratings = pd.read_csv('CiaoDVD/movie-ratings.txt', names=["user_id", "item_id", "genre_id", "review_id", "rating", "timestamp"],
+                header=None, sep=',', engine='python').drop_duplicates(subset=['user_id', 'item_id'])"""
 movie_ratings = pd.read_csv('random_dataset/dataset.csv', names=["user_id", "item_id", "rating"],
                 header=None, sep=',', engine='python')
 
@@ -19,15 +19,17 @@ matrix_um.drop(droplist, axis=1, inplace=True)
 
 #2d array matrix
 A = matrix_um.values
-
+print(A.shape)
 ##load graph
 
 G = nx.DiGraph()
+#with open('CiaoDVD/trusts.txt') as fp:
 with open('random_dataset/dataset_trust.csv') as fp:
     for idx, line in enumerate(fp.readlines()):
         a = line.split(',')[0]
         b = line.split(',')[1]
-        G.add_edge(int(a), int(b))
+        if int(a)<A.shape[0] and int(b)<A.shape[0]:
+            G.add_edge(int(a), int(b))
 
 for edge in list(G.edges):
     try:
@@ -84,12 +86,23 @@ for t in range(T):
     R_tilda, opinion_matrix, U, V = get_rating_estimations(updated_A)
     elapsed = start - time.time()
     print(elapsed)
+    total_opinion = 0
+    for c in C_p:
+        if val_ratings[c]>5:
+            total_opinion+=5-r_avg
+        elif val_ratings[c]<1:
+            total_opinion+=1-r_avg
+        else:
+            total_opinion+=val_ratings[c]-r_avg
+
+    with open("results.txt", "w") as f:
+        f.write(str(total_opinion)+"\n")
 
 print(seed_set)
 print(val)
 print(list(val_ratings))
 print(r_avg)
 print(C_p)
-np.savetxt("val_ratings.txt", val_ratings, newline=" ")
+
 
 
