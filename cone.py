@@ -61,7 +61,9 @@ seed_set = []
 opinion_set = []
 
 import time
+
 for t in range(T):
+    f = open("results.txt", "a+")
     print(t)
     start = time.time()
     v_t = V[-1] #new product profile
@@ -95,9 +97,8 @@ for t in range(T):
         else:
             total_opinion+=val_ratings[c]-r_avg
 
-    with open("results.txt", "w") as f:
-        f.write(str(total_opinion)+"\n")
-
+    f.write(str(total_opinion)+"\n")
+    f.close()
 print(seed_set)
 print(val)
 print(list(val_ratings))
