@@ -15,7 +15,7 @@ def get_rating_estimations(R, validation=False):
     f = 3  # Number of latent factor pairs
     lmbda = 0.50  # Regularisation strength
     gamma = 0.01  # Learning rate
-    n_epochs = 6  # Number of loops through training data
+    n_epochs = 20  # Number of loops through training data
     U = 3 * np.random.rand(n_u, f)  # Latent factors for users
     V = 3 * np.random.rand(n_m, f)  # Latent factors for movies
 
@@ -26,19 +26,18 @@ def get_rating_estimations(R, validation=False):
             U[u, :] += gamma * (e * V[i, :] - lmbda * U[u, :])  # Update this user's features
             V[i, :] += gamma * (e * U[u, :] - lmbda * V[i, :])  # Update this movie's features
 
-    R_tilda = np.dot(U, V.T)
+
 
     if validation:
-        val = random.randint(0, 400)
+        val = random.randint(0, len(V)-1)
+        print("val: "+str(val))
         val_v = V[val]
-        V = np.delete(V, np.s_[val], axis=0)
-
-        r_avg = np.true_divide(R.sum(0), (R != 0).sum(0)).mean()
-        opinion_matrix = R_tilda - r_avg
+        
+        #V = np.delete(V, np.s_[val], axis=0)
+        
         val_ratings = np.dot(U, val_v.T)
-        return R_tilda, opinion_matrix, U, V, val, val_ratings
+        
+        return U, V, val, val_ratings
 
-    r_avg = np.true_divide(R.sum(0), (R != 0).sum(0)).mean()
-    opinion_matrix = R_tilda - r_avg
 
-    return R_tilda, opinion_matrix, U, V
+    return U, V
