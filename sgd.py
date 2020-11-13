@@ -10,12 +10,12 @@ def rmse_score(R, Q, P):
     return np.sqrt(np.sum(MSE) / np.sum(I))  # sum of squared errors
 
 
-def get_rating_estimations(R, validation=False):
+def get_rating_estimations(R, R_truth, validation=False):
     n_u, n_m = R.shape
     f = 3  # Number of latent factor pairs
     lmbda = 0.50  # Regularisation strength
     gamma = 0.01  # Learning rate
-    n_epochs = 20  # Number of loops through training data
+    n_epochs = 8  # Number of loops through training data
     U = 3 * np.random.rand(n_u, f)  # Latent factors for users
     V = 3 * np.random.rand(n_m, f)  # Latent factors for movies
 
@@ -35,9 +35,10 @@ def get_rating_estimations(R, validation=False):
         
         #V = np.delete(V, np.s_[val], axis=0)
         
-        val_ratings = np.dot(U, val_v.T)
-        
-        return U, V, val, val_ratings
+        val_ratings = (np.dot(U, val_v.T)-np.dot(U, val_v.T).mean())*2+np.dot(U, val_v.T).mean()
+        val_ratings_truth = R_truth[:,val]
+    
+        return U, V, val, val_ratings, val_ratings_truth
 
 
     return U, V

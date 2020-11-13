@@ -1,18 +1,18 @@
-def greedy_om(G, r_q, t, C_p = [], k=1):
+def greedy_om(G, r_q, t, reverse_hashmap, candidate_neighbors, C_p = [], k=1):
     S=[] #seeds for current round
     C_out=[]
     C_best=[]
     O_max = float("-inf")
     while list(set(list(G.nodes))-set(list(set().union(C_p ,S))))!=[] and len(S)!=k:
         O_max = float("-inf")       
-        for user in list(set(list(G.nodes))-set(list(set().union(C_p ,S)))):
+        for user in list(set(candidate_neighbors)-set(list(set().union(C_p ,S)))):
             ##find total opinion for each user O and find activated nodes C
             S_t = list(set().union(C_p ,S, [user]))
             O=0
             C=[]
             infectee_dict = {}
             for s in S_t:
-                O+=r_q[s-1]
+                O+=r_q[reverse_hashmap[s]]
                 C.append(s)
                 infectees = list(set(list(G.successors(s)))-set(C_p)-set(C))
                 for i in infectees:
@@ -23,7 +23,7 @@ def greedy_om(G, r_q, t, C_p = [], k=1):
                             infectee_dict[i] = G[s][i]['weight']
 
                         if infectee_dict[i] > G.nodes[i]['threshold']:
-                            O+=r_q[i-1]
+                            O+=r_q[reverse_hashmap[i]]
                             C.append(i)
             #Calculate O_max
             if O>O_max:
